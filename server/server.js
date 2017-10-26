@@ -52,7 +52,7 @@ app.get('/rates', (req, res) => {
         let reqDate = `${dateObj.year}-${dateObj.month}-${dateObj.date}?base=${base}`;
         // query database, before making http request to API.
         Record.find({base: base, date: `${dateObj.year}-${dateObj.month}-${dateObj.date}`}).then((data) => {
-            if (data !== []) {
+            if (data.length >= 1) {
                 console.log("exists");
                 newData.push({
                     base: data[0].base,
