@@ -35,7 +35,7 @@ app.get('/rates', (req, res) => {
         let dateObj = {
             'year': minusDate.getFullYear().toString(),
             'month': (minusDate.getMonth() + 1).toString(),
-            'date': minusDate.getDate().toString()
+            'date': (minusDate.getDate() - 1).toString()
         };
 
         if (dateObj.date.length !== 2 && dateObj.month.length !== 2) {
@@ -47,13 +47,16 @@ app.get('/rates', (req, res) => {
             dateObj.month = "0" + dateObj.month;
         }
 
+        if(dateObj.date === "00") {
+            dateObj.date = "01";
+        }
+
         i++;
 
         let reqDate = `${dateObj.year}-${dateObj.month}-${dateObj.date}?base=${base}`;
         // query database, before making http request to API.
         Record.find({base: base, date: `${dateObj.year}-${dateObj.month}-${dateObj.date}`}).then((data) => {
             if (data.length >= 1) {
-                console.log("exists");
                 newData.push({
                     base: data[0].base,
                     date: data[0].date,
@@ -61,7 +64,6 @@ app.get('/rates', (req, res) => {
                 });
                 callback(null, newData);
             } else {
-                console.log('does not exist');
                 http.get('http://api.fixer.io/' + reqDate, (resp) => {
                     let data = [];
                     resp.on('data', (chunk) => {
