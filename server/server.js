@@ -4,19 +4,18 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const http = require('http');
 const async = require('async');
-const _ = require('lodash');
 
 //db connection
 const {mongoose} = require('./db/mongoose');
 
-//own modules
+//Record schema
 const {Record} = require('./models/record');
 
 const app = express();
 
 app.use(bodyParser.json());
 
-// list of supported currencies
+// list of supported currencies hardcoded for now.
 const currencies = ["AUD", "BGN", "BRL", "CAD", "CHF", "CNY", "CZK", "DKK", "EUR", "GBP", "HKD", "HRK", "HUF", "IDR", "ILS", "INR",
     "JPY", "KRW", "MXN", "MYR", "NOK", "NZD", "PHP", "PLN", "RON", "RUB", "SEK", "SGD", "THB", "TRY", "USD", "ZAR"];
 
@@ -41,11 +40,11 @@ app.get('/rates', (req, res) => {
         let i = 0; // data
         const base = req.header("base");
         const rates = req.header("rates");
+        let ts = date.getTime();
         async.whilst(function () {
                 return i <= 25
             }, function (callback) {
 
-                let ts = date.getTime();
                 let minusDays = ts - ((7 * i) * 24 * 60 * 60 * 1000);
                 let minusDate = new Date(minusDays);
                 let dateObj = {
@@ -73,6 +72,7 @@ app.get('/rates', (req, res) => {
                 // query database, before making http request to API.
                 Record.find({base: base, date: `${dateObj.year}-${dateObj.month}-${dateObj.date}`}).then((data) => {
                     if (data.length >= 1) {
+                        console.log('exists');
                         newData.push({
                             base: data[0].base,
                             date: data[0].date,
@@ -80,6 +80,7 @@ app.get('/rates', (req, res) => {
                         });
                         callback(null, newData);
                     } else {
+                        console.log("not exists");
                         http.get('http://api.fixer.io/' + reqDate, (resp) => {
                             let data = [];
                             resp.on('data', (chunk) => {
@@ -87,10 +88,15 @@ app.get('/rates', (req, res) => {
                             });
 
                             resp.on('end', () => {
-                                let newRecord = new Record(JSON.parse(data));
+                                const dataForObj = JSON.parse(data);
+                                let newRecord = new Record({
+                                    base: dataForObj.base,
+                                    date: `${dateObj.year}-${dateObj.month}-${dateObj.date}`,
+                                    rates: dataForObj.rates
+                                });
                                 newData.push({
                                     base: newRecord.base,
-                                    date: newRecord.date,
+                                    date: `${dateObj.year}-${dateObj.month}-${dateObj.date}`,
                                     rates: newRecord.rates[rates]
                                 });
                                 newRecord.save();
