@@ -50,7 +50,7 @@ app.get('/rates', (req, res) => {
                 let dateObj = {
                     'year': minusDate.getFullYear().toString(),
                     'month': (minusDate.getMonth() + 1).toString(),
-                    'date': (minusDate.getDate() - 1).toString()
+                    'date': minusDate.getDate().toString()
                 };
 
                 if (dateObj.date.length !== 2 && dateObj.month.length !== 2) {
