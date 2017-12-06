@@ -12,4 +12,5 @@
 4. run node server/server.js
 5. Use tool like Postman to send test requests
 
-
+## Project is also established on Heroku
+https://sheltered-hollows-68796.herokuapp.com/
